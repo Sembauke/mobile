@@ -6,9 +6,9 @@ import 'package:share/share.dart';
 import 'package:stacked/stacked.dart';
 import 'news_article_viewmodel.dart';
 
-class NewsArticleView extends StatelessWidget {
+class TutorialView extends StatelessWidget {
   // ignore: prefer_const_constructors_in_immutables
-  NewsArticleView({Key? key, required this.refId}) : super(key: key);
+  TutorialView({Key? key, required this.refId}) : super(key: key);
   late final String refId;
 
   @override
@@ -18,7 +18,7 @@ class NewsArticleView extends StatelessWidget {
       onDispose: (model) => model.removeScrollPosition(),
       builder: (context, model, child) => Scaffold(
         backgroundColor: const Color(0xFF0a0a23),
-        body: FutureBuilder<Article>(
+        body: FutureBuilder<Tutorial>(
           future: model.initState(refId),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
@@ -46,7 +46,7 @@ class NewsArticleView extends StatelessWidget {
     );
   }
 
-  Widget bottomButtons(Article article, NewsArticleViewModel model) {
+  Widget bottomButtons(Tutorial tutorial, NewsArticleViewModel model) {
     return Align(
       alignment: Alignment.bottomCenter,
       child: SizedBox(
@@ -61,7 +61,7 @@ class NewsArticleView extends StatelessWidget {
                 Container(
                   height: 150,
                 ),
-                NewsBookmarkViewWidget(article: article),
+                NewsBookmarkViewWidget(article: tutorial),
                 const SizedBox(
                   height: 35,
                   child: VerticalDivider(
@@ -73,7 +73,7 @@ class NewsArticleView extends StatelessWidget {
                   label: 'Share',
                   icon: Icons.share,
                   onPressed: () {
-                    Share.share('${article.title}\n\n${article.url}');
+                    Share.share('${tutorial.title}\n\n${tutorial.url}');
                   },
                   rightSided: true,
                 )
@@ -85,9 +85,17 @@ class NewsArticleView extends StatelessWidget {
     );
   }
 
-  ListView lazyLoadHtml(String html, BuildContext context, Article article,
-      NewsArticleViewModel model) {
-    var htmlToList = model.initLazyLoading(html, context, article);
+  ListView lazyLoadHtml(
+    String html,
+    BuildContext context,
+    Tutorial tutorial,
+    NewsArticleViewModel model,
+  ) {
+    List<Widget> htmlToList = model.initLazyLoading(
+      html,
+      context,
+      tutorial,
+    );
 
     return ListView.builder(
         shrinkWrap: true,

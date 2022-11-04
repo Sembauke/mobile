@@ -4,10 +4,10 @@ import 'package:freecodecamp/ui/views/news/news-article/news_article_viewmodel.d
 import 'package:freecodecamp/ui/views/news/news-bookmark/news_bookmark_viewmodel.dart';
 import 'package:stacked/stacked.dart';
 
-class NewsBookmarkPostView extends StatelessWidget {
+class BookmarkedTutorialView extends StatelessWidget {
   final BookmarkedArticle article;
 
-  const NewsBookmarkPostView({Key? key, required this.article})
+  const BookmarkedTutorialView({Key? key, required this.article})
       : super(key: key);
 
   @override

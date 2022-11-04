@@ -17,14 +17,14 @@ class HtmlHandler {
   final String html;
   final BuildContext context;
 
-  static List<Widget> htmlHandler(html, context, [article, fontFamily]) {
+  static List<Widget> htmlHandler(html, context, [tutorial, fontFamily]) {
     var result = HtmlParser.parseHTML(html);
 
     List<Widget> elements = [];
 
-    if (article is Article) {
+    if (tutorial is Tutorial) {
       elements.add(Stack(children: [
-        NewsArticleHeader(article: article),
+        TutorialHeader(tutorial: tutorial),
         AppBar(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
@@ -35,7 +35,7 @@ class HtmlHandler {
       elements.add(htmlWidgetBuilder(
           result.body!.children[i].outerHtml, context, fontFamily ?? 'Lato'));
     }
-    if (article is Article) {
+    if (tutorial is Tutorial) {
       elements.add(Container(height: 100));
     }
     return elements;

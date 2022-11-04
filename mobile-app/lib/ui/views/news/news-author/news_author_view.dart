@@ -4,15 +4,16 @@ import 'package:freecodecamp/ui/views/news/news-author/news_author_viewmodel.dar
 import 'package:freecodecamp/ui/widgets/article_list_widget.dart';
 import 'package:stacked/stacked.dart';
 
-class NewsAuthorView extends StatelessWidget {
-  const NewsAuthorView({Key? key, required this.authorSlug}) : super(key: key);
+class TutorialAuthorView extends StatelessWidget {
+  const TutorialAuthorView({Key? key, required this.authorSlug})
+      : super(key: key);
 
   final String authorSlug;
 
   @override
   Widget build(BuildContext context) {
-    return ViewModelBuilder<NewsAuthorViewModel>.reactive(
-        viewModelBuilder: () => NewsAuthorViewModel(),
+    return ViewModelBuilder<TutorialAuthorModel>.reactive(
+        viewModelBuilder: () => TutorialAuthorModel(),
         builder: (context, model, child) => Scaffold(
               appBar: AppBar(
                 title: const Text('Author profile'),
@@ -33,7 +34,7 @@ class NewsAuthorView extends StatelessWidget {
             ));
   }
 
-  Column view(NewsAuthorViewModel model, BuildContext ctxt, Author? author) {
+  Column view(TutorialAuthorModel model, BuildContext ctxt, Author? author) {
     return Column(
       children: [
         Stack(
