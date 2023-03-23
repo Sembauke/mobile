@@ -66,13 +66,12 @@ class TestRunner extends BaseViewModel {
 
     document.body!.append(bodyNode);
     if (!testing) {
-      webviewController!.loadUrl(Uri.dataFromString(
+      webviewController!.loadHtmlString(Uri.dataFromString(
         document.outerHtml,
         mimeType: 'text/html',
         encoding: Encoding.getByName('utf-8'),
       ).toString());
     }
-
     return document.outerHtml;
   }
 

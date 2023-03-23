@@ -1,11 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
 import 'package:flutter_code_editor/models/file_model.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:freecodecamp/enums/ext_type.dart';
 import 'package:freecodecamp/enums/panel_type.dart';
 
 import 'package:freecodecamp/models/learn/challenge_model.dart';
@@ -284,33 +282,12 @@ class ChallengeView extends StatelessWidget {
       color: const Color(0xFF0a0a23),
       child: Row(
         children: [
-          SizedBox(
-            height: 1,
-            width: 1,
-            child: WebView(
-              onWebViewCreated: (WebViewController webcontroller) {
-                model.setTestController = webcontroller;
-              },
-              javascriptMode: JavascriptMode.unrestricted,
-              javascriptChannels: {
-                JavascriptChannel(
-                  name: 'Print',
-                  onMessageReceived: (JavascriptMessage message) {
-                    if (message.message == 'completed') {
-                      model.setPanelType = PanelType.pass;
-                      model.setCompletedChallenge = true;
-                      model.setShowPanel = true;
-                    } else {
-                      model.setPanelType = PanelType.hint;
-                      model.setHint = message.message;
-                      model.setShowPanel = true;
-                    }
-                    model.setIsRunningTests = false;
-                  },
-                )
-              },
+          if (model.testController != null)
+            SizedBox(
+              height: 1,
+              width: 1,
+              child: WebViewWidget(controller: model.testController!),
             ),
-          ),
           Container(
             margin: const EdgeInsets.all(8),
             color: model.showPanel && model.panelType == PanelType.instruction
@@ -388,7 +365,7 @@ class ChallengeView extends StatelessWidget {
                 model.setEditorText =
                     currText == '' ? currFile.contents : currText;
                 model.setShowPreview = !model.showPreview;
-
+                model.initWebController();
                 model.refresh();
               },
               splashColor: Colors.transparent,
@@ -457,24 +434,8 @@ class ProjectPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: WebView(
-        userAgent: 'random',
-        javascriptMode: JavascriptMode.unrestricted,
-        onWebViewCreated: (WebViewController webcontroller) async {
-          model.setWebviewController = webcontroller;
-          webcontroller.loadUrl(
-            Uri.dataFromString(
-              await model.parsePreviewDocument(
-                await model.fileService.getFirstFileFromCache(
-                  challenge,
-                  Ext.html,
-                ),
-              ),
-              mimeType: 'text/html',
-              encoding: utf8,
-            ).toString(),
-          );
-        },
+      child: WebViewWidget(
+        controller: model.webviewController!,
       ),
     );
   }

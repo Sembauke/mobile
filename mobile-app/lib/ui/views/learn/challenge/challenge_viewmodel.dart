@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_code_editor/editor/editor.dart';
 import 'package:flutter_code_editor/enums/syntax.dart';
 import 'package:flutter_code_editor/models/editor_options.dart';
@@ -209,6 +210,13 @@ class ChallengeViewModel extends BaseViewModel {
         setEditorText = text;
       }
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      Future.delayed(const Duration(seconds: 0), () {
+        initTestController();
+        initWebController();
+      });
+    });
 
     setBlock = block;
     setChallengesCompleted = challengesCompleted;
@@ -431,6 +439,69 @@ class ChallengeViewModel extends BaseViewModel {
       }).toList();
       await learnService.postChallengeCompleted(challenge, challengeFiles);
     }
+  }
+
+  void initTestController() {
+    setTestController = WebViewController()
+      ..setJavaScriptMode(
+        JavaScriptMode.unrestricted,
+      )
+      ..addJavaScriptChannel(
+        'Print',
+        onMessageReceived: (message) {
+          if (message.message == 'completed') {
+            setPanelType = PanelType.pass;
+            setCompletedChallenge = true;
+            setShowPanel = true;
+          } else {
+            setPanelType = PanelType.hint;
+            setHint = message.message;
+            setShowPanel = true;
+          }
+          setIsRunningTests = false;
+        },
+      )
+      ..setNavigationDelegate(
+        NavigationDelegate(onPageFinished: (controller) async {
+          webviewController!.loadHtmlString(
+            Uri.dataFromString(
+              await parsePreviewDocument(
+                await fileService.getFirstFileFromCache(
+                  await challenge!,
+                  Ext.html,
+                ),
+              ),
+              mimeType: 'text/html',
+              encoding: utf8,
+            ).toString(),
+          );
+        }),
+      );
+  }
+
+  void initWebController() {
+    setWebviewController = WebViewController()
+      ..setJavaScriptMode(
+        JavaScriptMode.unrestricted,
+      )
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (useless) async {
+            webviewController!.loadHtmlString(
+              Uri.dataFromString(
+                await parsePreviewDocument(
+                  await fileService.getFirstFileFromCache(
+                    await challenge!,
+                    Ext.html,
+                  ),
+                ),
+                mimeType: 'text/html',
+                encoding: utf8,
+              ).toString(),
+            );
+          },
+        ),
+      );
   }
 
   void goToNextChallenge(
