@@ -70,24 +70,26 @@ class DrawerWidgetView extends StatelessWidget {
                         onTap: () {
                           if (model.loggedIn) {
                             model.routeComponent('PROFILE', context);
+                          } else {
+                            model.routeComponent('LOGIN', context);
                           }
                         },
                       ),
                       buildDivider(),
-                      DrawerTile(
-                        key: const Key('daily-challenges'),
-                        component: 'DAILY CHALLENGES',
-                        icon: Icons.extension,
-                        route: () {
-                          model.routeComponent('DAILY_CHALLENGES', context);
-                        },
-                      ),
                       DrawerTile(
                         key: const Key('learn'),
                         component: 'LEARN',
                         icon: '',
                         route: () {
                           model.routeComponent('LEARN', context);
+                        },
+                      ),
+                      DrawerTile(
+                        key: const Key('daily-challenges'),
+                        component: 'DAILY CHALLENGES',
+                        icon: Icons.extension,
+                        route: () {
+                          model.routeComponent('DAILY_CHALLENGES', context);
                         },
                       ),
                       DrawerTile(
@@ -149,14 +151,6 @@ class DrawerWidgetView extends StatelessWidget {
                   ),
                 ),
               ),
-              const SafeArea(
-                minimum: EdgeInsets.only(bottom: 16),
-                child: Text(
-                  'freeCodeCamp is a donor-supported tax-exempt 501(c)(3) nonprofit organization',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 10, color: Colors.white70),
-                ),
-              )
             ],
           ),
         ),
