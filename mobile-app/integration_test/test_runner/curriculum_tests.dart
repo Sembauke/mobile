@@ -91,75 +91,79 @@ void main() {
             }
           }
 
+          bool testFailed = false;
           Challenge challenge = Challenge.fromJson(currChallenge);
           print(
               'Challenge: ${challenge.id} - ${challenge.title} - ${challenge.challengeType}');
+          try {
+            String getLines(String contents, [List? range]) {
+              if (range == null || range.isEmpty) {
+                return challenge.files[0].contents;
+              }
 
-          String getLines(String contents, [List? range]) {
-            if (range == null || range.isEmpty) {
-              return challenge.files[0].contents;
+              final lines = contents.split('\n');
+              final editableLines = (range[1] <= range[0])
+                  ? []
+                  : lines.sublist(
+                      min(range[0], lines.length),
+                      min(range[1] - 1, lines.length),
+                    );
+
+              return editableLines.join('\n');
             }
 
-            final lines = contents.split('\n');
-            final editableLines = (range[1] <= range[0])
-                ? []
-                : lines.sublist(
-                    min(range[0], lines.length),
-                    min(range[1] - 1, lines.length),
-                  );
+            final LearnFileService fileService = locator<LearnFileService>();
 
-            return editableLines.join('\n');
-          }
+            ChallengeFile currentFile =
+                await fileService.getCurrentEditedFileFromCache(
+              challenge,
+            );
 
-          final LearnFileService fileService = locator<LearnFileService>();
+            String editableRegion = getLines(
+              currentFile.contents,
+              challenge.files[0].editableRegionBoundaries,
+            );
 
-          ChallengeFile currentFile =
-              await fileService.getCurrentEditedFileFromCache(
-            challenge,
-          );
+            ScriptBuilder builder = ScriptBuilder();
+            final userCode = await builder.buildUserCode(
+              challenge,
+              babelWebView.webViewController,
+              testing: true,
+            );
 
-          String editableRegion = getLines(
-            currentFile.contents,
-            challenge.files[0].editableRegionBoundaries,
-          );
-
-          ScriptBuilder builder = ScriptBuilder();
-          final userCode = await builder.buildUserCode(
-            challenge,
-            babelWebView.webViewController,
-            testing: true,
-          );
-
-          bool testFailed = false;
-
-          await testController!.callAsyncJavaScript(
-            functionBody: ScriptBuilder.runnerScript,
-            arguments: {
-              'userCode': userCode,
-              'workerType': builder.getWorkerType(challenge.challengeType),
-              'combinedCode': await builder.combinedCode(challenge),
-              'editableRegionContent': editableRegion,
-              'hooks': {
-                'beforeAll': challenge.hooks.beforeAll,
-                'beforeEach': challenge.hooks.beforeEach,
-                'afterEach': challenge.hooks.afterEach,
-              },
-            },
-          );
-
-          for (ChallengeTest test in challenge.tests) {
-            final testRes = await testController.callAsyncJavaScript(
-              functionBody: ScriptBuilder.testExecutionScript,
+            await testController!.callAsyncJavaScript(
+              functionBody: ScriptBuilder.runnerScript,
               arguments: {
-                'testStr': test.javaScript,
+                'userCode': userCode,
+                'workerType': builder.getWorkerType(challenge.challengeType),
+                'combinedCode': await builder.combinedCode(challenge),
+                'editableRegionContent': editableRegion,
+                'hooks': {
+                  'beforeAll': challenge.hooks.beforeAll,
+                  'beforeEach': challenge.hooks.beforeEach,
+                  'afterEach': challenge.hooks.afterEach,
+                },
               },
             );
-            if (testRes?.value['pass'] == null || testRes?.error != null) {
-              print(
-                  'TEST FAILED: ${challenge.id} - ${challenge.title} - ${test.instruction} - ${test.javaScript} - $testRes\n');
-              testFailed = true;
-              didTestsFail = true;
+
+            for (ChallengeTest test in challenge.tests) {
+              final testRes = await testController.callAsyncJavaScript(
+                functionBody: ScriptBuilder.testExecutionScript,
+                arguments: {
+                  'testStr': test.javaScript,
+                },
+              );
+              if (testRes?.value['pass'] == null || testRes?.error != null) {
+                print(
+                    'TEST FAILED: ${challenge.id} - ${challenge.title} - ${test.instruction} - ${test.javaScript} - $testRes\n');
+                testFailed = true;
+                didTestsFail = true;
+              }
             }
+          } catch (e) {
+            print('TEST FAILED: ${challenge.id} - ${challenge.title} - $e\n');
+            testFailed = true;
+            didTestsFail = true;
           }
 
           if (testFailed) {
