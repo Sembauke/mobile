@@ -32,6 +32,15 @@ class MissingSessionCookiesException implements Exception {
       'The login response was missing these cookies: ${missing.join(', ')}';
 }
 
+/// Thrown when the session cookies were created but could not be used to load
+/// the signed-in user.
+class SessionUserFetchException implements Exception {
+  const SessionUserFetchException();
+
+  @override
+  String toString() => 'The signed-in user could not be loaded.';
+}
+
 class AuthenticationService {
   static final AuthenticationService _authenticationService =
       AuthenticationService._internal();
@@ -258,7 +267,9 @@ class AuthenticationService {
 
     extractCookies(res);
     await writeTokensToStorage();
-    await fetchUser();
+    if (!await _loadUserSession()) {
+      throw const SessionUserFetchException();
+    }
   }
 
   Future<bool> login(
@@ -305,6 +316,13 @@ class AuthenticationService {
       );
       return false;
     } on MissingSessionCookiesException catch (err, st) {
+      await _reportSessionFailure(
+        context,
+        details: err.toString(),
+        stackTrace: st,
+      );
+      return false;
+    } on SessionUserFetchException catch (err, st) {
       await _reportSessionFailure(
         context,
         details: err.toString(),
@@ -485,6 +503,14 @@ class AuthenticationService {
   }
 
   Future<void> fetchUser() async {
+    await _loadUserSession();
+  }
+
+  /// Loads the user for the current session and reports whether it succeeded.
+  ///
+  /// Public callers only need the side effects from [fetchUser], but login
+  /// must use this result to avoid reporting success for a cleared session.
+  Future<bool> _loadUserSession() async {
     try {
       final res = await _dio.get(
         '$baseApiURL/user/session-user',
@@ -501,11 +527,14 @@ class AuthenticationService {
         staticIsloggedIn = true;
         isLoggedInStream.sink.add(true);
         progress.add(true);
+        return true;
       } else {
         await _clearLocalSession();
+        return false;
       }
     } on DioException {
       await _clearLocalSession();
+      return false;
     }
   }
 
