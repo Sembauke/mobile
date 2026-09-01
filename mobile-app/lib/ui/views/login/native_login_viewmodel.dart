@@ -1,10 +1,10 @@
-import 'package:dio/dio.dart';
+import 'dart:developer';
+
+import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:freecodecamp/app/app.locator.dart';
 import 'package:freecodecamp/service/authentication/authentication_service.dart';
 import 'package:freecodecamp/service/developer_service.dart';
-import 'package:freecodecamp/service/dio_service.dart';
 import 'package:stacked/stacked.dart';
 
 class NativeLoginViewModel extends BaseViewModel {
@@ -12,7 +12,6 @@ class NativeLoginViewModel extends BaseViewModel {
   TextEditingController otpController = TextEditingController();
   bool showOTPfield = false;
   bool incorrectOTP = false;
-  final Dio _dio = DioService.dio;
 
   final AuthenticationService auth = locator<AuthenticationService>();
   final DeveloperService developerService = locator<DeveloperService>();
@@ -63,20 +62,21 @@ class NativeLoginViewModel extends BaseViewModel {
   void sendOTPtoEmail() async {
     showOTPfield = true;
     notifyListeners();
-    await dotenv.load();
-    await _dio.post(
-      'https://${dotenv.get('AUTH0_DOMAIN')}/passwordless/start',
-      data: {
-        'client_id': dotenv.get('AUTH0_CLIENT_ID'),
-        'connection': 'email',
-        'email': emailController.text,
-        'send': 'code',
-      },
-    );
+    try {
+      await auth.auth0.api.startPasswordlessWithEmail(
+        email: emailController.text,
+        passwordlessType: PasswordlessType.code,
+      );
+    } on ApiException catch (e) {
+      // NOTE: without a code on its way, leaving the OTP field up would strand
+      // the user, so send them back to the email step to retry
+      log('message: ApiException on passwordless start: ${e.message}');
+      showOTPfield = false;
+      notifyListeners();
+    }
   }
 
   void verifyOTP(BuildContext context) async {
-    await dotenv.load();
     bool isSuccess = await auth.login(
       context,
       'email',
