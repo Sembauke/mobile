@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:freecodecamp/app/app.locator.dart';
+import 'package:freecodecamp/extensions/i18n_extension.dart';
 import 'package:freecodecamp/service/authentication/authentication_service.dart';
 import 'package:freecodecamp/service/developer_service.dart';
 import 'package:stacked/stacked.dart';
@@ -59,7 +60,7 @@ class NativeLoginViewModel extends BaseViewModel {
     });
   }
 
-  void sendOTPtoEmail() async {
+  void sendOTPtoEmail(BuildContext context) async {
     showOTPfield = true;
     notifyListeners();
     try {
@@ -73,6 +74,10 @@ class NativeLoginViewModel extends BaseViewModel {
       log('message: ApiException on passwordless start: ${e.message}');
       showOTPfield = false;
       notifyListeners();
+      auth.snackbar.showSnackbar(
+        title: context.t.error_two,
+        message: context.t.email_code_not_sent,
+      );
     }
   }
 
