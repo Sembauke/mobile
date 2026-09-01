@@ -162,6 +162,34 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets('returns true after exchanging credentials for a user session',
+      (tester) async {
+    adapter.responses.addAll([
+      sessionResponse(cookies: allSessionCookies),
+      jsonResponse(sessionUserResponse, 200),
+    ]);
+    final context = await buildContext(tester);
+
+    final login = authenticationService.login(
+      context,
+      'email',
+      email: 'camper@example.com',
+      otp: '123456',
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(await login, isTrue);
+    expect(AuthenticationService.staticIsloggedIn, isTrue);
+    expect(storage, <String, String>{
+      'csrf': 'csrf',
+      'csrf_token': 'csrf-token',
+      'jwt_access_token': 'access-token',
+    });
+    expect(authenticationService.userModel, isNotNull);
+    expect(adapter.requests, hasLength(2));
+  });
+
   testWidgets('returns false when the user-session request fails',
       (tester) async {
     adapter.responses.addAll([
@@ -285,6 +313,64 @@ const allSessionCookies = <String>[
   'csrf_token=csrf-token; Path=/',
   'jwt_access_token=access-token; Path=/',
 ];
+
+final sessionUserResponse = <String, dynamic>{
+  'result': 'camper',
+  'user': <String, dynamic>{
+    'camper': <String, dynamic>{
+      'id': 'camper-id',
+      'email': 'camper@example.com',
+      'username': 'camper',
+      'name': 'Camper',
+      'picture': '',
+      'currentChallengeId': '',
+      'emailVerified': true,
+      'isEmailVerified': true,
+      'isCheater': false,
+      'isDonating': false,
+      'isHonest': true,
+      'isFrontEndCert': false,
+      'isDataVisCert': false,
+      'isBackEndCert': false,
+      'isFullStackCert': false,
+      'isRespWebDesignCert': false,
+      'is2018DataVisCert': false,
+      'isFrontEndLibsCert': false,
+      'isJsAlgoDataStructCert': false,
+      'isApisMicroservicesCert': false,
+      'isInfosecQaCert': false,
+      'isQaCertV7': false,
+      'isInfosecCertV7': false,
+      'isSciCompPyCertV7': false,
+      'isDataAnalysisPyCertV7': false,
+      'isMachineLearningPyCertV7': false,
+      'isRelationalDatabaseCertV8': false,
+      'isCollegeAlgebraPyCertV8': false,
+      'isFoundationalCSharpCertV8': false,
+      'joinDate': '2025-01-01T00:00:00.000Z',
+      'points': 0,
+      'calendar': <String, int>{},
+      'completedChallenges': <Object>[],
+      'completedDailyCodingChallenges': <Object>[],
+      'savedChallenges': <Object>[],
+      'portfolio': <Object>[],
+      'yearsTopContributor': <Object>[],
+      'theme': 'default',
+      'profileUI': <String, bool>{
+        'isLocked': false,
+        'showAbout': false,
+        'showCerts': false,
+        'showDonation': false,
+        'showHeatMap': false,
+        'showLocation': false,
+        'showName': false,
+        'showPoints': false,
+        'showPortfolio': false,
+        'showTimeLine': false,
+      },
+    },
+  },
+};
 
 ResponseBody sessionResponse({required List<String> cookies}) =>
     jsonResponse(<String, dynamic>{}, 200, cookies: cookies);
