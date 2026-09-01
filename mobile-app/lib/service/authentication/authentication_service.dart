@@ -221,7 +221,10 @@ class AuthenticationService {
         parameters: parameters,
       );
     } on WebAuthenticationException catch (e) {
-      if (e.code != 'TRANSACTION_ACTIVE_ALREADY') rethrow;
+      // Auth0 exposes cancel as an iOS-only API. On every other platform,
+      // surface the original exception instead of attempting an unsupported
+      // recovery.
+      if (e.code != 'TRANSACTION_ACTIVE_ALREADY' || !Platform.isIOS) rethrow;
 
       log('message: clearing a stale web auth transaction');
       WebAuthentication.cancel();
