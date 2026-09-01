@@ -60,7 +60,7 @@ class NativeLoginViewModel extends BaseViewModel {
     });
   }
 
-  void sendOTPtoEmail(BuildContext context) async {
+  Future<void> sendOTPtoEmail(BuildContext context) async {
     showOTPfield = true;
     notifyListeners();
     try {

@@ -83,6 +83,11 @@ class AuthenticationService {
   static const Color _dialogButtonBackground = Color(0xFF0a0a23);
   static const RoundedRectangleBorder _dialogBorder = RoundedRectangleBorder();
 
+  @visibleForTesting
+  static bool Function()? isIOSOverride;
+
+  static bool get _isIOS => isIOSOverride?.call() ?? Platform.isIOS;
+
   String _csrf = '';
   String _csrfToken = '';
   String _jwtAccessToken = '';
@@ -224,7 +229,7 @@ class AuthenticationService {
       // Auth0 exposes cancel as an iOS-only API. On every other platform,
       // surface the original exception instead of attempting an unsupported
       // recovery.
-      if (e.code != 'TRANSACTION_ACTIVE_ALREADY' || !Platform.isIOS) rethrow;
+      if (e.code != 'TRANSACTION_ACTIVE_ALREADY' || !_isIOS) rethrow;
 
       log('message: clearing a stale web auth transaction');
       WebAuthentication.cancel();
